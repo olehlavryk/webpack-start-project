@@ -1,21 +1,20 @@
-const path = require('path')
-const HTMLWebpackPlugin = require('html-webpack-plugin')
-const {CleanWebpackPlugin} = require('clean-webpack-plugin')
-const CopyWebpackPlugin = require('copy-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const OptimizeCssAssetWebpackPlugin = require('optimize-css-assets-webpack-plugin')
-const TerserWebpackPlugin = require('terser-webpack-plugin')
-const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer')
-
-const isDev = process.env.NODE_ENV === 'development'
-const isProd = !isDev
+const path = require('path');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCssAssetWebpackPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserWebpackPlugin = require('terser-webpack-plugin');
+const {BundleAnalyzerPlugin} = require('webpack-bundle-analyzer');
+const isDev = process.env.NODE_ENV === 'development';
+const isProd = !isDev;
 
 const optimization = () => {
   const config = {
     splitChunks: {
       chunks: 'all'
     }
-  }
+  };
 
   if (isProd) {
     config.minimizer = [
@@ -25,9 +24,9 @@ const optimization = () => {
   }
 
   return config
-}
+};
 
-const filename = ext => isDev ? `[name].${ext}` : `[name].[hash].${ext}`
+const filename = ext => isDev ? `[name].${ext}` : `[name].[hash].${ext}`;
 
 const cssLoaders = extra => {
   const loaders = [
@@ -35,18 +34,18 @@ const cssLoaders = extra => {
       loader: MiniCssExtractPlugin.loader,
       options: {
         hmr: isDev,
-        reloadAll: true
+        reloadAll: true,
       },
     },
     'css-loader'
-  ]
+  ];
 
   if (extra) {
     loaders.push(extra)
   }
 
   return loaders
-}
+};
 
 const babelOptions = preset => {
   const opts = {
@@ -56,71 +55,80 @@ const babelOptions = preset => {
     plugins: [
       '@babel/plugin-proposal-class-properties'
     ]
-  }
+  };
 
   if (preset) {
     opts.presets.push(preset)
   }
 
   return opts
-}
+};
 
 
 const jsLoaders = () => {
   const loaders = [{
     loader: 'babel-loader',
     options: babelOptions()
-  }]
+  }];
 
   if (isDev) {
     loaders.push('eslint-loader')
   }
 
   return loaders
-}
+};
 
 const plugins = () => {
   const base = [
     new HTMLWebpackPlugin({
-      template: './index.html',
-      minify: {
-        collapseWhitespace: isProd
-      }
+      filename: 'index.html',
+      template: path.resolve(__dirname, 'src/index.html'),
+    }),
+    new HTMLWebpackPlugin({
+      filename: 'blog.html',
+      template: path.resolve(__dirname, 'src/blog.html'),
     }),
     new CleanWebpackPlugin(),
     new CopyWebpackPlugin([
       {
         from: path.resolve(__dirname, 'src/favicon.ico'),
         to: path.resolve(__dirname, 'dist')
-      }
+      },
+      {
+        from: path.resolve(__dirname, 'src/assets/images'),
+        to: path.resolve(__dirname, 'dist/assets/images')
+      },
+      {
+        from: path.resolve(__dirname, 'src/assets/fonts'),
+        to: path.resolve(__dirname, 'dist/assets/fonts')
+      },
     ]),
     new MiniCssExtractPlugin({
-      filename: filename('css')
+      filename: 'assets/css/' + filename('css')
     })
-  ]
+  ];
 
   if (isProd) {
     base.push(new BundleAnalyzerPlugin())
   }
 
   return base
-}
+};
 
 module.exports = {
   context: path.resolve(__dirname, 'src'),
   mode: 'development',
   entry: {
-    main: ['@babel/polyfill', './index.jsx'],
-    analytics: './analytics.ts'
+    main: ['@babel/polyfill', path.resolve(__dirname, 'src/assets/js/index.js')]
   },
   output: {
-    filename: filename('js'),
+    filename: 'assets/js/' + filename('js'),
     path: path.resolve(__dirname, 'dist')
   },
   resolve: {
     extensions: ['.js', '.json', '.png'],
     alias: {
-      '@models': path.resolve(__dirname, 'src/models'),
+      '@images': path.resolve(__dirname, 'src/images'),
       '@': path.resolve(__dirname, 'src'),
     }
   },
@@ -184,4 +192,4 @@ module.exports = {
       }
     ]
   }
-}
+};
